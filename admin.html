@@ -9,40 +9,40 @@
     body { background: #0f172a; color: #fff; padding: 20px; max-width: 600px; margin: auto; }
     h2 { margin-bottom: 20px; color: #38bdf8; }
     .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
-    input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; }
-    button { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #0f172a; }
-    .motorista-item { background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1rem; }
+    button { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #0f172a; font-size: 1rem; }
+    .motorista-item { background: #0f172a; padding: 14px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
   </style>
 </head>
 <body>
 
-  <!-- BLOQUEIO POR SENHA -->
+  <!-- TELA DE SENHA -->
   <div id="login-admin" class="card">
-    <h2>Acesso Restrito</h2>
-    <input type="password" id="senha-admin" placeholder="Digite sua senha de Admin">
-    <button onclick="carregarAdmin()">Entrar</button>
+    <h2>Acesso do Proprietário</h2>
+    <input type="password" id="senha-admin" placeholder="Digite a senha (padrão: 1234)">
+    <button onclick="carregarAdmin()">Entrar no Painel</button>
   </div>
 
-  <!-- CONTEÚDO ADMIN -->
+  <!-- PAINEL -->
   <div id="painel-admin" style="display: none;">
     <h2>Painel do Proprietário</h2>
 
     <div class="card">
-      <h3 style="margin-bottom: 12px;">+ Novo Motorista</h3>
-      <input type="text" id="novo-nome" placeholder="Nome do Motorista">
-      <input type="text" id="novo-id" placeholder="ID (ex: 101 ou celular dele)">
+      <h3 style="margin-bottom: 12px; color: #4ade80;">+ Cadastrar Motorista</h3>
+      <input type="text" id="novo-nome" placeholder="Nome Completo do Motorista">
+      <input type="text" id="novo-id" placeholder="ID (ex: 102 ou celular dele)">
       <input type="text" id="novo-whats" placeholder="WhatsApp">
-      <button onclick="cadastrarMotorista()">Cadastrar e Liberar</button>
+      <button onclick="cadastrarMotorista()">Cadastrar e Liberar Acesso</button>
     </div>
 
     <div class="card">
-      <h3 style="margin-bottom: 12px;">Motoristas Ativos</h3>
+      <h3 style="margin-bottom: 12px;">Seus Clientes Ativos</h3>
       <div id="lista-motoristas">Carregando...</div>
     </div>
   </div>
 
   <script>
-    // MESMA URL DO SCRIPT DO PASSO 1:
+    // SEU LINK OFICIAL INJETADO:
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSjygvxtO0Rwh3txwztrsjWXoqYGtGcQS_pGk54KDLu7gZAP-DIvXDX9PF_m4EwI2I/exec";
     let senhaSalva = "";
 
@@ -51,7 +51,7 @@
       fetch(`${SCRIPT_URL}?action=getAdminData&senha=${senhaSalva}`)
         .then(r => r.json())
         .then(res => {
-          if (!res.sucesso) return alert(res.erro);
+          if (!res.sucesso) return alert(res.erro || "Senha incorreta");
           document.getElementById("login-admin").style.display = "none";
           document.getElementById("painel-admin").style.display = "block";
           renderizarLista(res.motoristas);
@@ -60,7 +60,7 @@
 
     function renderizarLista(lista) {
       const container = document.getElementById("lista-motoristas");
-      if (lista.length === 0) return container.innerHTML = "<p>Nenhum motorista cadastrado ainda.</p>";
+      if (!lista || lista.length === 0) return container.innerHTML = "<p>Nenhum motorista cadastrado ainda.</p>";
       
       container.innerHTML = lista.map(m => `
         <div class="motorista-item">
@@ -68,7 +68,7 @@
             <strong>${m.nome}</strong><br>
             <small style="color: #94a3b8;">ID: ${m.id} | WhatsApp: ${m.whatsapp}</small>
           </div>
-          <button style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="copiarLink('${m.id}')">Copiar Link</button>
+          <button style="width: auto; padding: 8px 12px; font-size: 0.8rem;" onclick="copiarLink('${m.id}')">Copiar Link</button>
         </div>
       `).join("");
     }
@@ -84,14 +84,18 @@
         body: JSON.stringify({ action: "addMotorista", senha: senhaSalva, nome: nome, id: id, whatsapp: whats })
       }).then(() => {
         alert("Motorista cadastrado com sucesso!");
+        document.getElementById("novo-nome").value = "";
+        document.getElementById("novo-id").value = "";
+        document.getElementById("novo-whats").value = "";
         carregarAdmin();
       });
     }
 
     function copiarLink(id) {
-      const baseUrl = window.location.href.replace("admin.html", "index.html");
-      navigator.clipboard.writeText(`${baseUrl}?id=${id}`);
-      alert("Link do motorista copiado para a área de transferência!");
+      const urlBase = window.location.origin;
+      const linkPronto = `${urlBase}/?id=${id}`;
+      navigator.clipboard.writeText(linkPronto);
+      alert(`Link copiado: ${linkPronto}`);
     }
   </script>
 </body>
