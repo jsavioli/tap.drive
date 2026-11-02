@@ -11,7 +11,6 @@
     .logo { font-size: 1.3rem; font-weight: 800; color: #38bdf8; }
     .driver-name { font-size: 0.85rem; color: #94a3b8; }
     
-    /* Cartões */
     .cards-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
     .card { background: #1e293b; border-radius: 14px; padding: 16px; border: 1px solid #334155; }
     .card-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px; }
@@ -22,13 +21,11 @@
     .text-red { color: #f87171; }
     .text-blue { color: #38bdf8; }
 
-    /* Botões de Ação Grandões */
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     .btn-action { border: none; padding: 18px 10px; border-radius: 14px; font-size: 1.05rem; font-weight: 700; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .btn-ganho { background: #16a34a; }
     .btn-gasto { background: #dc2626; }
     
-    /* Modais / Telinhas de Lançamento */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: flex-end; z-index: 100; }
     .modal.active { display: flex; }
     .modal-content { background: #1e293b; width: 100%; padding: 24px 20px 34px; border-top-left-radius: 20px; border-top-right-radius: 20px; }
@@ -39,30 +36,28 @@
     .btn-submit { width: 100%; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; border: none; background: #38bdf8; color: #0f172a; cursor: pointer; margin-top: 8px; }
     .btn-cancel { width: 100%; padding: 12px; border-radius: 12px; font-size: 0.9rem; border: none; background: transparent; color: #94a3b8; cursor: pointer; margin-top: 4px; }
     
-    /* Tela de primeiro acesso (digitar ID) */
     #login-box { display: none; padding: 30px 10px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <!-- TELA DE LOGIN RÁPIDO (PRIMEIRO ACESSO) -->
+  <!-- PRIMEIRO ACESSO -->
   <div id="login-box">
     <div class="logo" style="font-size: 2rem; margin-bottom: 8px;">TAP DRIVE</div>
     <p style="color: #94a3b8; margin-bottom: 24px;">Digite seu ID ou Telefone para entrar</p>
     <div class="input-group">
-      <input type="text" id="input-motorista-id" placeholder="Ex: 11999999999 ou 101" style="text-align: center;">
+      <input type="text" id="input-motorista-id" placeholder="Digite seu ID (ex: 101)" style="text-align: center;">
     </div>
     <button class="btn-submit" onclick="salvarLogin()">Acessar Meu Painel</button>
   </div>
 
-  <!-- APLICATIVO DO MOTORISTA -->
+  <!-- APLICATIVO -->
   <div id="app-container" style="display: none;">
     <div class="header">
       <div class="logo">TAP DRIVE</div>
-      <div class="driver-name" id="nome-exibicao">Carregando...</div>
+      <div class="driver-name" id="nome-exibicao">Conectando...</div>
     </div>
 
-    <!-- BOTÕES GRANDES PARA O SUPORTE DO CARRO -->
     <div class="actions">
       <button class="btn-action btn-ganho" onclick="abrirModal('modal-ganho')">
         <span>+ GANHO</span>
@@ -74,7 +69,6 @@
       </button>
     </div>
 
-    <!-- CARTÕES DE HOJE -->
     <div class="cards-grid">
       <div class="card lucro">
         <div class="card-title">Sobrou no Bolso (Hoje)</div>
@@ -91,7 +85,7 @@
     </div>
   </div>
 
-  <!-- MODAL LANÇAR GANHO -->
+  <!-- MODAL GANHO -->
   <div class="modal" id="modal-ganho">
     <div class="modal-content">
       <h3 class="text-green">+ Lançar Ganho</h3>
@@ -108,12 +102,12 @@
           <option value="Outro">Outro</option>
         </select>
       </div>
-      <button class="btn-submit" onclick="enviarGanho()">Salvar</button>
+      <button class="btn-submit" id="btn-save-ganho" onclick="enviarGanho()">Salvar</button>
       <button class="btn-cancel" onclick="fecharModais()">Voltar</button>
     </div>
   </div>
 
-  <!-- MODAL LANÇAR GASTO -->
+  <!-- MODAL GASTO -->
   <div class="modal" id="modal-gasto">
     <div class="modal-content">
       <h3 class="text-red">- Lançar Despesa</h3>
@@ -131,18 +125,17 @@
           <option value="Outros">Outros</option>
         </select>
       </div>
-      <button class="btn-submit" onclick="enviarGasto()">Salvar</button>
+      <button class="btn-submit" id="btn-save-gasto" onclick="enviarGasto()">Salvar</button>
       <button class="btn-cancel" onclick="fecharModais()">Voltar</button>
     </div>
   </div>
 
   <script>
-    // COLE ABAIXO A URL DA SUA IMPLANTAÇÃO DO APPS SCRIPT:
+    // SEU LINK OFICIAL INJETADO:
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSjygvxtO0Rwh3txwztrsjWXoqYGtGcQS_pGk54KDLu7gZAP-DIvXDX9PF_m4EwI2I/exec";
 
     let motoristaId = localStorage.getItem("tapdrive_id");
 
-    // Verifica se veio na URL (ex: ?id=101)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("id")) {
       motoristaId = urlParams.get("id");
@@ -165,7 +158,7 @@
     }
 
     function formatarMoeda(val) {
-      return "R$ " + Number(val).toFixed(2).replace(".", ",");
+      return "R$ " + Number(val || 0).toFixed(2).replace(".", ",");
     }
 
     function iniciarPainel() {
@@ -184,7 +177,7 @@
           document.getElementById("val-gastos-hoje").innerText = formatarMoeda(res.gastosHoje);
           document.getElementById("val-lucro-hoje").innerText = formatarMoeda(res.lucroHoje);
         })
-        .catch(() => alert("Erro ao carregar dados. Verifique a internet."));
+        .catch(() => alert("Erro ao conectar com a planilha."));
     }
 
     function abrirModal(id) { document.getElementById(id).classList.add("active"); }
@@ -195,14 +188,17 @@
     function enviarGanho() {
       const valor = document.getElementById("ganho-valor").value;
       const app = document.getElementById("ganho-app").value;
-      if (!valor || valor <= 0) return alert("Informe o valor");
+      if (!valor || valor <= 0) return alert("Informe o valor!");
 
+      document.getElementById("btn-save-ganho").innerText = "Salvando...";
       fecharModais();
+
       fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({ action: "addGanho", id: motoristaId, valor: valor, app: app })
       }).then(() => {
         document.getElementById("ganho-valor").value = "";
+        document.getElementById("btn-save-ganho").innerText = "Salvar";
         iniciarPainel();
       });
     }
@@ -210,14 +206,17 @@
     function enviarGasto() {
       const valor = document.getElementById("gasto-valor").value;
       const cat = document.getElementById("gasto-cat").value;
-      if (!valor || valor <= 0) return alert("Informe o valor");
+      if (!valor || valor <= 0) return alert("Informe o valor!");
 
+      document.getElementById("btn-save-gasto").innerText = "Salvando...";
       fecharModais();
+
       fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({ action: "addGasto", id: motoristaId, valor: valor, categoria: cat })
       }).then(() => {
         document.getElementById("gasto-valor").value = "";
+        document.getElementById("btn-save-gasto").innerText = "Salvar";
         iniciarPainel();
       });
     }
