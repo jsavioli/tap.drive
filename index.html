@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TAP DRIVE</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; padding: 16px; padding-bottom: 30px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .logo { font-size: 1.3rem; font-weight: 800; color: #38bdf8; }
+    .driver-name { font-size: 0.85rem; color: #94a3b8; }
+    
+    /* Cartões */
+    .cards-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .card { background: #1e293b; border-radius: 14px; padding: 16px; border: 1px solid #334155; }
+    .card-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px; }
+    .card-val { font-size: 1.8rem; font-weight: 700; }
+    
+    .lucro { border-color: #38bdf8; background: linear-gradient(135deg, #1e293b, #0f2744); }
+    .text-green { color: #4ade80; }
+    .text-red { color: #f87171; }
+    .text-blue { color: #38bdf8; }
+
+    /* Botões de Ação Grandões */
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .btn-action { border: none; padding: 18px 10px; border-radius: 14px; font-size: 1.05rem; font-weight: 700; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .btn-ganho { background: #16a34a; }
+    .btn-gasto { background: #dc2626; }
+    
+    /* Modais / Telinhas de Lançamento */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: flex-end; z-index: 100; }
+    .modal.active { display: flex; }
+    .modal-content { background: #1e293b; width: 100%; padding: 24px 20px 34px; border-top-left-radius: 20px; border-top-right-radius: 20px; }
+    .modal-content h3 { margin-bottom: 16px; font-size: 1.2rem; }
+    .input-group { margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 6px; }
+    .input-group input, .input-group select { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1.1rem; }
+    .btn-submit { width: 100%; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; border: none; background: #38bdf8; color: #0f172a; cursor: pointer; margin-top: 8px; }
+    .btn-cancel { width: 100%; padding: 12px; border-radius: 12px; font-size: 0.9rem; border: none; background: transparent; color: #94a3b8; cursor: pointer; margin-top: 4px; }
+    
+    /* Tela de primeiro acesso (digitar ID) */
+    #login-box { display: none; padding: 30px 10px; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <!-- TELA DE LOGIN RÁPIDO (PRIMEIRO ACESSO) -->
+  <div id="login-box">
+    <div class="logo" style="font-size: 2rem; margin-bottom: 8px;">TAP DRIVE</div>
+    <p style="color: #94a3b8; margin-bottom: 24px;">Digite seu ID ou Telefone para entrar</p>
+    <div class="input-group">
+      <input type="text" id="input-motorista-id" placeholder="Ex: 11999999999 ou 101" style="text-align: center;">
+    </div>
+    <button class="btn-submit" onclick="salvarLogin()">Acessar Meu Painel</button>
+  </div>
+
+  <!-- APLICATIVO DO MOTORISTA -->
+  <div id="app-container" style="display: none;">
+    <div class="header">
+      <div class="logo">TAP DRIVE</div>
+      <div class="driver-name" id="nome-exibicao">Carregando...</div>
+    </div>
+
+    <!-- BOTÕES GRANDES PARA O SUPORTE DO CARRO -->
+    <div class="actions">
+      <button class="btn-action btn-ganho" onclick="abrirModal('modal-ganho')">
+        <span>+ GANHO</span>
+        <small style="font-size: 0.7rem; font-weight: normal; opacity: 0.9;">Nova Corrida</small>
+      </button>
+      <button class="btn-action btn-gasto" onclick="abrirModal('modal-gasto')">
+        <span>- GASTO</span>
+        <small style="font-size: 0.7rem; font-weight: normal; opacity: 0.9;">Abastecimento/Outros</small>
+      </button>
+    </div>
+
+    <!-- CARTÕES DE HOJE -->
+    <div class="cards-grid">
+      <div class="card lucro">
+        <div class="card-title">Sobrou no Bolso (Hoje)</div>
+        <div class="card-val text-blue" id="val-lucro-hoje">R$ 0,00</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Faturamento Hoje</div>
+        <div class="card-val text-green" id="val-fat-hoje">R$ 0,00</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Despesas Hoje</div>
+        <div class="card-val text-red" id="val-gastos-hoje">R$ 0,00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LANÇAR GANHO -->
+  <div class="modal" id="modal-ganho">
+    <div class="modal-content">
+      <h3 class="text-green">+ Lançar Ganho</h3>
+      <div class="input-group">
+        <label>Valor Recebido (R$)</label>
+        <input type="number" step="0.01" id="ganho-valor" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="input-group">
+        <label>Aplicativo</label>
+        <select id="ganho-app">
+          <option value="Uber">Uber</option>
+          <option value="99">99</option>
+          <option value="Particular">Particular</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <button class="btn-submit" onclick="enviarGanho()">Salvar</button>
+      <button class="btn-cancel" onclick="fecharModais()">Voltar</button>
+    </div>
+  </div>
+
+  <!-- MODAL LANÇAR GASTO -->
+  <div class="modal" id="modal-gasto">
+    <div class="modal-content">
+      <h3 class="text-red">- Lançar Despesa</h3>
+      <div class="input-group">
+        <label>Valor Gasto (R$)</label>
+        <input type="number" step="0.01" id="gasto-valor" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="input-group">
+        <label>Tipo de Gasto</label>
+        <select id="gasto-cat">
+          <option value="Combustível">Combustível</option>
+          <option value="Alimentação">Alimentação</option>
+          <option value="Pedágio/Estacionamento">Pedágio / Estac.</option>
+          <option value="Manutenção">Manutenção</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
+      <button class="btn-submit" onclick="enviarGasto()">Salvar</button>
+      <button class="btn-cancel" onclick="fecharModais()">Voltar</button>
+    </div>
+  </div>
+
+  <script>
+    // COLE ABAIXO A URL DA SUA IMPLANTAÇÃO DO APPS SCRIPT:
+    const SCRIPT_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI";
+
+    let motoristaId = localStorage.getItem("tapdrive_id");
+
+    // Verifica se veio na URL (ex: ?id=101)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("id")) {
+      motoristaId = urlParams.get("id");
+      localStorage.setItem("tapdrive_id", motoristaId);
+    }
+
+    if (!motoristaId) {
+      document.getElementById("login-box").style.display = "block";
+    } else {
+      iniciarPainel();
+    }
+
+    function salvarLogin() {
+      const val = document.getElementById("input-motorista-id").value.trim();
+      if (!val) return alert("Digite seu código!");
+      localStorage.setItem("tapdrive_id", val);
+      motoristaId = val;
+      document.getElementById("login-box").style.display = "none";
+      iniciarPainel();
+    }
+
+    function formatarMoeda(val) {
+      return "R$ " + Number(val).toFixed(2).replace(".", ",");
+    }
+
+    function iniciarPainel() {
+      document.getElementById("app-container").style.display = "block";
+      fetch(`${SCRIPT_URL}?action=getDriverData&id=${motoristaId}`)
+        .then(r => r.json())
+        .then(res => {
+          if (!res.sucesso) {
+            alert(res.erro || "Acesso não encontrado!");
+            localStorage.removeItem("tapdrive_id");
+            location.reload();
+            return;
+          }
+          document.getElementById("nome-exibicao").innerText = res.nome;
+          document.getElementById("val-fat-hoje").innerText = formatarMoeda(res.fatHoje);
+          document.getElementById("val-gastos-hoje").innerText = formatarMoeda(res.gastosHoje);
+          document.getElementById("val-lucro-hoje").innerText = formatarMoeda(res.lucroHoje);
+        })
+        .catch(() => alert("Erro ao carregar dados. Verifique a internet."));
+    }
+
+    function abrirModal(id) { document.getElementById(id).classList.add("active"); }
+    function fecharModais() {
+      document.querySelectorAll(".modal").forEach(m => m.classList.remove("active"));
+    }
+
+    function enviarGanho() {
+      const valor = document.getElementById("ganho-valor").value;
+      const app = document.getElementById("ganho-app").value;
+      if (!valor || valor <= 0) return alert("Informe o valor");
+
+      fecharModais();
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "addGanho", id: motoristaId, valor: valor, app: app })
+      }).then(() => {
+        document.getElementById("ganho-valor").value = "";
+        iniciarPainel();
+      });
+    }
+
+    function enviarGasto() {
+      const valor = document.getElementById("gasto-valor").value;
+      const cat = document.getElementById("gasto-cat").value;
+      if (!valor || valor <= 0) return alert("Informe o valor");
+
+      fecharModais();
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "addGasto", id: motoristaId, valor: valor, categoria: cat })
+      }).then(() => {
+        document.getElementById("gasto-valor").value = "";
+        iniciarPainel();
+      });
+    }
+  </script>
+</body>
+</html>
